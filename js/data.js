@@ -85,14 +85,14 @@ const GHL = {
         DEBUG.log(`Fetching GHL calls for last ${days} days...`, 'info', { start: start.toISOString(), end: end.toISOString() });
 
         try {
-            const url = `https://services.leadconnectorhq.com/calls/search?locationId=${settings.ghl_location_id}&startTime=${start.getTime()}&endTime=${end.getTime()}&limit=20`;
+            const url = `https://services.leadconnectorhq.com/calls/?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
 
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${settings.ghl_api_key}`,
                     'Accept': 'application/json',
-                    'Version': '2021-07-28'
+                    'Version': '2021-04-15'
                 }
             });
 
@@ -118,7 +118,7 @@ const GHL = {
         DEBUG.log(`Fetching transcript for message: ${messageId}`, 'info');
 
         try {
-            const url = `https://services.leadconnectorhq.com/conversations/messages/${messageId}/locations/${settings.ghl_location_id}/transcription`;
+            const url = `https://services.leadconnectorhq.com/conversations/${settings.ghl_location_id}/messages/${messageId}/transcription`;
 
             const response = await fetch(url, {
                 method: 'GET',

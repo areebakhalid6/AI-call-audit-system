@@ -5,6 +5,13 @@
 // ─── Dashboard Page ───
 function renderDashboardPage() {
   const audits = DB.getAudits();
+
+  // Real Data Guard: If we are in real-data mode and audits are empty, don't show stats
+  if (audits.length === 0) {
+    renderEmptyDashboard();
+    return;
+  }
+
   const stats = Analytics.getStats(audits);
   const agentStats = Analytics.getAgentStats(audits);
   const recentUnbooked = audits.filter(a => a.booking_outcome !== 'Booked' && a.booking_intent_level === 'High').slice(0, 4);
@@ -13,7 +20,7 @@ function renderDashboardPage() {
   el.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Dashboard</h1>
+        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.2</span></h1>
         <p class="page-subtitle">Pre-sales call performance at a glance · Last 30 days</p>
       </div>
       <button class="btn btn-primary" onclick="App.navigateTo('audit')">
@@ -944,6 +951,31 @@ function renderAuditModal(audit) {
       <ul class="coaching-list">
         ${(audit.coaching_recommendations || []).map(c => `<li>${c}</li>`).join('')}
       </ul>
+    </div>
+  `;
+}
+
+function renderEmptyDashboard() {
+  const el = document.getElementById('page-dashboard');
+  el.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.2</span></h1>
+        <p class="page-subtitle">Welcome to CallIQ Audit System</p>
+      </div>
+      <button class="btn btn-primary" onclick="App.navigateTo('audit')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Audit
+      </button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;background:var(--bg-secondary);border-radius:12px;border:1px dashed var(--border-color)">
+      <div style="width:64px;height:64px;background:var(--indigo-lightest);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;color:var(--indigo)">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:600;margin-bottom:8px">Your dashboard is empty</h2>
+      <p style="color:var(--text-muted);max-width:400px;margin:0 auto 24px">Run your first AI call audit to start seeing performance metrics, agent scores, and revenue leak alerts.</p>
+      <button class="btn btn-primary" onclick="App.navigateTo('audit')">Get Started</button>
     </div>
   `;
 }
