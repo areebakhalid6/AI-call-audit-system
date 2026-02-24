@@ -695,8 +695,12 @@ function renderSettingsPage() {
               <label class="toggle"><input type="checkbox" id="s-ghl-auto" ${s.auto_note_ghl ? 'checked' : ''}><div class="toggle-slider"></div></label>
             </div>
             <div class="form-group" style="margin-top:12px">
-              <label for="s-ghl-key">GHL API Key</label>
+              <label for="s-ghl-key">GHL API Key (V2 / pit-key)</label>
               <input type="password" id="s-ghl-key" value="${s.ghl_api_key}" placeholder="GHL API Key" />
+            </div>
+            <div class="form-group" style="margin-top:12px">
+              <label for="s-ghl-loc">GHL Location ID</label>
+              <input type="text" id="s-ghl-loc" value="${s.ghl_location_id}" placeholder="e.g. Cy61ZIoB1Q68krX0lSZA" />
             </div>
           </div>
 
@@ -737,6 +741,7 @@ function saveSettings() {
     openai_model: document.getElementById('s-model')?.value || 'gpt-4o',
     auto_note_ghl: document.getElementById('s-ghl-auto')?.checked || false,
     ghl_api_key: document.getElementById('s-ghl-key')?.value || '',
+    ghl_location_id: document.getElementById('s-ghl-loc')?.value || '',
     compliance_alerts: document.getElementById('s-compliance')?.checked || true,
   };
   DB.saveSettings(settings);

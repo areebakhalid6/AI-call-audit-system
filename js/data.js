@@ -316,13 +316,55 @@ const DB = {
     }
 };
 
+const GHL = {
+    async fetchCalls(days = 7) {
+        const settings = DB.getSettings();
+        if (!settings.ghl_api_key || !settings.ghl_location_id) {
+            throw new Error('GHL API Key or Location ID missing in Settings.');
+        }
+
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - days);
+
+        // GHL V2 Reporting/Calls endpoint
+        // Note: 'pit-' keys are typically used as Bearer tokens for V2
+        const url = `https://services.leadconnectorhq.com/calls/search?locationId=${settings.ghl_location_id}&startTime=${start.getTime()}&endTime=${end.getTime()}&limit=20`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${settings.ghl_api_key}`,
+                'Accept': 'application/json',
+                'Version': '2021-07-28'
+            }
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || `GHL API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.calls || [];
+    },
+
+    async fetchTranscript(callId) {
+        // This is a placeholder as GHL V2 transcript retrieval usually involves 
+        // fetching the recording or message attachment.
+        // For now, we return null to allow manual pasting if fetch fails.
+        return null;
+    }
+};
+
 const DEFAULT_SETTINGS = {
     openai_api_key: '',
     openai_model: 'gpt-4o',
     agency_name: 'Your Migration Agency',
     mara_number: '',
     auto_note_ghl: false,
-    ghl_api_key: '',
+    ghl_api_key: 'pit-0ca0568a-d707-46f3-a018-95a9c1a00c3f',
+    ghl_location_id: 'Cy61ZIoB1Q68krX0lSZA',
     compliance_alerts: true,
     email_reports: false,
     report_email: ''

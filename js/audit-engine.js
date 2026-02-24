@@ -141,9 +141,22 @@ function renderAuditPage() {
       <div class="card">
         <div class="card-header">
           <div class="card-title">Call Details</div>
-          <div class="card-subtitle">Fill in the metadata from GHL, then paste the transcript</div>
+        <div class="card-subtitle">Fill in the metadata from GHL, then paste the transcript</div>
         </div>
         <div class="card-body">
+          <div id="ghl-fetch-wrap" style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px border-dashed var(--border-color)">
+            <div class="flex flex-between" style="margin-bottom:12px">
+              <div style="font-weight:600;font-size:14px">Pull from GoHighLevel</div>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="handleFetchGHLCalls()" id="ghl-fetch-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Fetch Recent Calls
+              </button>
+            </div>
+            <div id="ghl-calls-list" class="ghl-calls-list">
+              <p class="text-xs text-muted">Click fetch to see calls from the last 7 days</p>
+            </div>
+          </div>
+
           <form class="audit-form" id="audit-form" onsubmit="handleAuditSubmit(event)">
 
             <div class="form-row">
@@ -434,4 +447,71 @@ Lead: Maybe, yes. Can you send me the link?
 Agent: Absolutely, I'll send it through to you right now while we're on the call. What's your email?`;
 
   Toast.show('Demo transcript loaded — click Run AI Audit', 'info');
+}
+
+// ─── GHL Integration Logic ───
+async function handleFetchGHLCalls() {
+  const btn = document.getElementById('ghl-fetch-btn');
+  const listEl = document.getElementById('ghl-calls-list');
+  const originalHTML = btn.innerHTML;
+
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner spinner-sm"></div> Fetching…`;
+  listEl.innerHTML = `<div class="flex justify-center py-4"><div class="spinner"></div></div>`;
+
+  try {
+    const calls = await GHL.fetchCalls(7);
+
+    if (calls.length === 0) {
+      listEl.innerHTML = `<p class="text-xs text-muted" style="text-align:center;padding:12px">No recent calls found in this GHL location.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = `
+      <div style="display:grid;gap:8px;max-height:220px;overflow-y:auto;padding-right:4px">
+        ${calls.map(c => {
+      const date = new Date(c.startTime);
+      const duration = Math.round((new Date(c.endTime) - date) / 60000);
+      const contactName = c.contactName || 'Unknown Contact';
+      const direction = c.direction === 'inbound' ? '↓ In' : '↑ Out';
+
+      return `
+            <div class="action-item" style="padding:10px;cursor:pointer" onclick="importGHLCall(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+              <div class="action-item-left">
+                <div class="stat-icon indigo" style="width:28px;height:28px;font-size:10px">${direction}</div>
+                <div>
+                  <div class="action-item-name" style="font-size:13px">${contactName}</div>
+                  <div class="action-item-meta" style="font-size:11px">${Format.date(c.startTime.split('T')[0])} · ${duration}m</div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-xs btn-primary">Import</button>
+            </div>
+          `;
+    }).join('')}
+      </div>
+    `;
+
+  } catch (err) {
+    listEl.innerHTML = `<p class="text-xs rose-light" style="text-align:center;padding:12px">Failed to fetch: ${err.message}</p>`;
+    Toast.show(`GHL Error: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHTML;
+  }
+}
+
+function importGHLCall(call) {
+  // Map GHL fields to form
+  document.getElementById('f-contact').value = call.contactName || '';
+  document.getElementById('f-agent').value = call.userName || ''; // In V2 it's often user name
+  document.getElementById('f-date').value = call.startTime.split('T')[0];
+
+  const duration = Math.round((new Date(call.endTime) - new Date(call.startTime)) / 60000);
+  document.getElementById('f-duration').value = duration || 0;
+
+  // Note: Transcript retrieval is complex via API, usually requires fetching recording first or attachments
+  // We alert the user to paste the transcript if it's not automatically available
+  Toast.show(`Imported ${call.contactName || 'call'}. Please paste the transcript to continue.`, 'success');
+
+  // Optional: If we had a direct transcript URL we'd fetch it here
 }
