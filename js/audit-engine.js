@@ -234,6 +234,14 @@ function renderAuditPage() {
               </div>
             </div>
 
+            <div id="ghl-recording-wrap" style="display:none;margin-bottom:20px;padding:12px;background:var(--indigo-lightest);border:1px solid var(--indigo-light);border-radius:8px">
+              <div class="flex flex-between" style="margin-bottom:8px">
+                <div style="font-weight:600;font-size:13px;color:var(--indigo-dark)">Call Recording</div>
+                <a id="f-recording-link" href="#" target="_blank" class="text-xs indigo" style="text-decoration:underline">Open in GHL</a>
+              </div>
+              <audio id="f-audio-player" controls style="width:100%"></audio>
+            </div>
+
             <div class="form-group">
               <label for="f-transcript">Call Transcript *</label>
               <textarea id="f-transcript" placeholder="Paste the full call transcript here.
@@ -253,13 +261,10 @@ Minimum 200 words recommended for accurate scoring." required></textarea>
       : ''
     }
 
-            <div style="display:grid;grid-template-columns:1fr auto;gap:12px">
+            <div style="display:grid;grid-template-columns:1fr;gap:12px">
               <button type="submit" class="btn btn-primary btn-lg btn-block" id="audit-submit-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 Run AI Audit
-              </button>
-              <button type="button" class="btn btn-secondary btn-lg" onclick="loadDemoTranscript()" title="Load a sample transcript for testing">
-                Demo
               </button>
             </div>
           </form>
@@ -508,6 +513,20 @@ async function importGHLCall(call) {
 
   const duration = Math.round((new Date(call.endTime) - new Date(call.startTime)) / 60000);
   document.getElementById('f-duration').value = duration || 0;
+
+  // Handle recording
+  const recordingWrap = document.getElementById('ghl-recording-wrap');
+  const audioPlayer = document.getElementById('f-audio-player');
+  const recordingLink = document.getElementById('f-recording-link');
+
+  if (call.recordingUrl) {
+    recordingWrap.style.display = 'block';
+    audioPlayer.src = call.recordingUrl;
+    recordingLink.href = call.recordingUrl;
+  } else {
+    recordingWrap.style.display = 'none';
+    audioPlayer.src = '';
+  }
 
   // Try to fetch transcript if messageId is present
   const transcriptArea = document.getElementById('f-transcript');
