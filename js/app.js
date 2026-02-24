@@ -100,6 +100,12 @@ const App = {
     closeModal() {
         document.getElementById('audit-modal').classList.add('hidden');
         document.body.style.overflow = '';
+    },
+
+    refreshSettings() {
+        if (this.currentPage === 'settings') {
+            renderSettingsPage();
+        }
     }
 };
 

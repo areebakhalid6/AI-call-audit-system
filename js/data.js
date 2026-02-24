@@ -3,7 +3,7 @@
 // Sample audit records + storage helpers
 // ============================================================
 
-const STORAGE_KEY = 'calliq_audits_v2';
+const STORAGE_KEY = 'calliq_audits_v3_real';
 const SETTINGS_KEY = 'calliq_settings';
 
 // ─── Sample Audit Data ───
@@ -40,6 +40,33 @@ const DB = {
 
     saveSettings(settings) {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    },
+
+    clearData() {
+        localStorage.removeItem(STORAGE_KEY);
+        window.location.reload();
+    }
+};
+
+const DEBUG = {
+    getLogs() {
+        try {
+            return JSON.parse(localStorage.getItem('calliq_debug_logs') || '[]');
+        } catch { return []; }
+    },
+    log(message, type = 'info', details = null) {
+        const logs = this.getLogs();
+        logs.unshift({
+            timestamp: new Date().toISOString(),
+            message,
+            type,
+            details
+        });
+        localStorage.setItem('calliq_debug_logs', JSON.stringify(logs.slice(0, 20)));
+        console.log(`[${type.toUpperCase()}] ${message}`, details);
+    },
+    clear() {
+        localStorage.removeItem('calliq_debug_logs');
     }
 };
 
@@ -47,6 +74,7 @@ const GHL = {
     async fetchCalls(days = 7) {
         const settings = DB.getSettings();
         if (!settings.ghl_api_key || !settings.ghl_location_id) {
+            DEBUG.log('GHL Fetch rejected: Missing API Key or Location ID', 'error');
             throw new Error('GHL API Key or Location ID missing in Settings.');
         }
 
@@ -54,36 +82,44 @@ const GHL = {
         const start = new Date();
         start.setDate(end.getDate() - days);
 
-        // GHL V2 Reporting/Calls endpoint
-        // Note: 'pit-' keys are typically used as Bearer tokens for V2
-        const url = `https://services.leadconnectorhq.com/calls/search?locationId=${settings.ghl_location_id}&startTime=${start.getTime()}&endTime=${end.getTime()}&limit=20`;
+        DEBUG.log(`Fetching GHL calls for last ${days} days...`, 'info', { start: start.toISOString(), end: end.toISOString() });
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${settings.ghl_api_key}`,
-                'Accept': 'application/json',
-                'Version': '2021-07-28'
+        try {
+            const url = `https://services.leadconnectorhq.com/calls/search?locationId=${settings.ghl_location_id}&startTime=${start.getTime()}&endTime=${end.getTime()}&limit=20`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${settings.ghl_api_key}`,
+                    'Accept': 'application/json',
+                    'Version': '2021-07-28'
+                }
+            });
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                DEBUG.log(`GHL API Error: ${response.status}`, 'error', { status: response.status, body: errBody });
+                throw new Error(errBody.message || `GHL API Error: ${response.status}`);
             }
-        });
 
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.message || `GHL API Error: ${response.status}`);
+            const data = await response.json();
+            DEBUG.log(`Successfully fetched ${data.calls?.length || 0} calls`, 'success');
+            return data.calls || [];
+        } catch (e) {
+            DEBUG.log('Fetch operation failed', 'error', { error: e.message });
+            throw e;
         }
-
-        const data = await response.json();
-        return data.calls || [];
     },
 
     async fetchTranscript(messageId) {
         const settings = DB.getSettings();
         if (!settings.ghl_api_key || !settings.ghl_location_id) return null;
 
-        // GHL V2 Transcription endpoint
-        const url = `https://services.leadconnectorhq.com/conversations/messages/${messageId}/locations/${settings.ghl_location_id}/transcription`;
+        DEBUG.log(`Fetching transcript for message: ${messageId}`, 'info');
 
         try {
+            const url = `https://services.leadconnectorhq.com/conversations/messages/${messageId}/locations/${settings.ghl_location_id}/transcription`;
+
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -93,12 +129,21 @@ const GHL = {
                 }
             });
 
-            if (!response.ok) return null;
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                DEBUG.log(`Transcript API Error: ${response.status}`, 'warning', { status: response.status, body: errBody });
+                return null;
+            }
 
             const data = await response.json();
-            return typeof data === 'string' ? data : (data.transcription || null);
+            const text = typeof data === 'string' ? data : (data.transcription || null);
+
+            if (text) DEBUG.log('Transcript retrieved successfully', 'success');
+            else DEBUG.log('No transcript content found in response', 'info');
+
+            return text;
         } catch (e) {
-            console.error('Transcript fetch failed:', e);
+            DEBUG.log('Transcript fetch failed', 'error', { error: e.message });
             return null;
         }
     }

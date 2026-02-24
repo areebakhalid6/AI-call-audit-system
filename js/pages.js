@@ -726,11 +726,37 @@ function renderSettingsPage() {
             </div>
           </div>
 
-          <button class="btn btn-primary btn-block" onclick="saveSettings()">Save Settings</button>
+          <button class="btn btn-primary btn-block" onclick="saveSettings()" style="margin-bottom:24px">Save Settings</button>
+
+          <div class="setting-section">
+            <div class="setting-section-title">System Logs & Debugging</div>
+            <div id="debug-logs-container" style="max-height:300px;overflow-y:auto;background:var(--bg-secondary);padding:12px;border-radius:8px;font-family:monospace;font-size:11px;border:1px solid var(--border-color)">
+              ${renderDebugLogs()}
+            </div>
+            <div class="flex flex-between" style="margin-top:12px">
+              <button class="btn btn-secondary btn-sm" onclick="App.refreshSettings()">Refresh Logs</button>
+              <button class="btn btn-secondary btn-sm" onclick="clearLogs()">Clear Logs</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   `;
+}
+
+function renderDebugLogs() {
+  const logs = DEBUG.getLogs();
+  if (logs.length === 0) return '<div class="text-muted">No logs recorded yet.</div>';
+  return logs.map(l => `
+    <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div class="flex flex-between">
+        <span class="${l.type === 'error' ? 'rose-light' : l.type === 'success' ? 'emerald-light' : 'indigo'}">[${l.type.toUpperCase()}]</span>
+        <span class="text-muted">${l.timestamp.split('T')[1].split('.')[0]}</span>
+      </div>
+      <div style="margin-top:2px">${l.message}</div>
+      ${l.details ? `<pre style="margin-top:4px;color:var(--text-muted);font-size:10px">${JSON.stringify(l.details, null, 2)}</pre>` : ''}
+    </div>
+  `).join('');
 }
 
 function saveSettings() {
@@ -749,10 +775,16 @@ function saveSettings() {
 }
 
 function clearAllData() {
-  if (confirm('This will delete all audit records and reset to sample data. Are you sure?')) {
-    localStorage.removeItem(STORAGE_KEY);
-    Toast.show('Data cleared. Sample data restored.', 'info');
+  if (confirm('This will permanently delete all audit records from this browser. Are you sure?')) {
+    DB.clearData();
+    Toast.show('All audit data has been cleared.', 'info');
   }
+}
+
+function clearLogs() {
+  DEBUG.clear();
+  App.refreshSettings();
+  Toast.show('Debug logs cleared.', 'info');
 }
 
 // ─── Audit Result Modal ───
