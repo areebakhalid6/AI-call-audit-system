@@ -500,18 +500,28 @@ async function handleFetchGHLCalls() {
   }
 }
 
-function importGHLCall(call) {
+async function importGHLCall(call) {
   // Map GHL fields to form
   document.getElementById('f-contact').value = call.contactName || '';
-  document.getElementById('f-agent').value = call.userName || ''; // In V2 it's often user name
+  document.getElementById('f-agent').value = call.userName || '';
   document.getElementById('f-date').value = call.startTime.split('T')[0];
 
   const duration = Math.round((new Date(call.endTime) - new Date(call.startTime)) / 60000);
   document.getElementById('f-duration').value = duration || 0;
 
-  // Note: Transcript retrieval is complex via API, usually requires fetching recording first or attachments
-  // We alert the user to paste the transcript if it's not automatically available
-  Toast.show(`Imported ${call.contactName || 'call'}. Please paste the transcript to continue.`, 'success');
+  // Try to fetch transcript if messageId is present
+  const transcriptArea = document.getElementById('f-transcript');
+  transcriptArea.value = '';
 
-  // Optional: If we had a direct transcript URL we'd fetch it here
+  if (call.messageId) {
+    Toast.show('Fetching transcript from GHL...', 'info');
+    const transcript = await GHL.fetchTranscript(call.messageId);
+    if (transcript) {
+      transcriptArea.value = transcript;
+      Toast.show(`Imported ${call.contactName || 'call'} and transcript successfully.`, 'success');
+      return;
+    }
+  }
+
+  Toast.show(`Imported call details. No transcript found — please paste it manually.`, 'info');
 }

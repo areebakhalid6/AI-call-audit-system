@@ -349,11 +349,31 @@ const GHL = {
         return data.calls || [];
     },
 
-    async fetchTranscript(callId) {
-        // This is a placeholder as GHL V2 transcript retrieval usually involves 
-        // fetching the recording or message attachment.
-        // For now, we return null to allow manual pasting if fetch fails.
-        return null;
+    async fetchTranscript(messageId) {
+        const settings = DB.getSettings();
+        if (!settings.ghl_api_key || !settings.ghl_location_id) return null;
+
+        // GHL V2 Transcription endpoint
+        const url = `https://services.leadconnectorhq.com/conversations/messages/${messageId}/locations/${settings.ghl_location_id}/transcription`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${settings.ghl_api_key}`,
+                    'Accept': 'application/json',
+                    'Version': '2021-04-15'
+                }
+            });
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            return typeof data === 'string' ? data : (data.transcription || null);
+        } catch (e) {
+            console.error('Transcript fetch failed:', e);
+            return null;
+        }
     }
 };
 
