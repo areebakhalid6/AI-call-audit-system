@@ -103,8 +103,12 @@ const GHL = {
             }
 
             const data = await response.json();
-            DEBUG.log(`Successfully fetched ${data.calls?.length || 0} calls`, 'success');
-            return data.calls || [];
+            const keys = Object.keys(data);
+            const callsList = data.calls || data.callLogs || data.data || [];
+
+            DEBUG.log(`Fetched data keys: ${keys.join(', ')}`, 'info');
+            DEBUG.log(`Successfully fetched ${callsList.length} calls`, 'success');
+            return callsList;
         } catch (e) {
             DEBUG.log('Fetch operation failed', 'error', { error: e.message });
             throw e;
