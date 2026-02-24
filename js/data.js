@@ -110,6 +110,12 @@ const GHL = {
             DEBUG.log(`Successfully fetched ${callsList.length} calls`, 'success');
             return callsList;
         } catch (e) {
+            if (e.message === 'Failed to fetch' || e.name === 'TypeError') {
+                DEBUG.log('CORS Error detected: Browser blocked the request.', 'error', {
+                    advice: 'Please ensure your CORS browser extension is ENABLED for services.leadconnectorhq.com'
+                });
+                throw new Error('CORS Error: Browser blocked the request. Please enable your CORS extension and try again.');
+            }
             DEBUG.log('Fetch operation failed', 'error', { error: e.message });
             throw e;
         }
