@@ -3,7 +3,7 @@
 // Sample audit records + storage helpers
 // ============================================================
 
-const STORAGE_KEY = 'calliq_audits';
+const STORAGE_KEY = 'calliq_audits_v2';
 const SETTINGS_KEY = 'calliq_settings';
 
 // ─── Sample Audit Data ───
