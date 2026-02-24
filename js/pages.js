@@ -20,7 +20,7 @@ function renderDashboardPage() {
   el.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.4</span></h1>
+        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.5</span></h1>
         <p class="page-subtitle">Pre-sales call performance at a glance · Last 30 days</p>
       </div>
       <button class="btn btn-primary" onclick="App.navigateTo('audit')">
@@ -709,6 +709,13 @@ function renderSettingsPage() {
               <label for="s-ghl-loc">GHL Location ID</label>
               <input type="text" id="s-ghl-loc" value="${s.ghl_location_id}" placeholder="e.g. Cy61ZIoB1Q68krX0lSZA" />
             </div>
+            <div class="setting-row" style="margin-top:12px">
+              <div>
+                <div class="setting-label">Use CORS Proxy</div>
+                <div class="setting-desc">Fixes "Failed to fetch" errors. Recommended if NOT using a CORS extension.</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="s-ghl-proxy" ${s.ghl_use_proxy ? 'checked' : ''}><div class="toggle-slider"></div></label>
+            </div>
           </div>
 
           <div class="setting-section">
@@ -775,6 +782,7 @@ function saveSettings() {
     auto_note_ghl: document.getElementById('s-ghl-auto')?.checked || false,
     ghl_api_key: document.getElementById('s-ghl-key')?.value || '',
     ghl_location_id: document.getElementById('s-ghl-loc')?.value || '',
+    ghl_use_proxy: document.getElementById('s-ghl-proxy')?.checked || false,
     compliance_alerts: document.getElementById('s-compliance')?.checked || true,
   };
   DB.saveSettings(settings);
@@ -960,7 +968,7 @@ function renderEmptyDashboard() {
   el.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.4</span></h1>
+        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.5</span></h1>
         <p class="page-subtitle">Welcome to CallIQ Audit System</p>
       </div>
       <button class="btn btn-primary" onclick="App.navigateTo('audit')">

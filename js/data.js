@@ -85,7 +85,12 @@ const GHL = {
         DEBUG.log(`Fetching GHL calls for last ${days} days...`, 'info', { start: start.toISOString(), end: end.toISOString() });
 
         try {
-            const url = `https://services.leadconnectorhq.com/calls/?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
+            let url = `https://services.leadconnectorhq.com/calls?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
+
+            if (settings.ghl_use_proxy) {
+                url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                DEBUG.log('Using CORS Proxy for GHL fetch', 'info');
+            }
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -112,9 +117,9 @@ const GHL = {
         } catch (e) {
             if (e.message === 'Failed to fetch' || e.name === 'TypeError') {
                 DEBUG.log('CORS Error detected: Browser blocked the request.', 'error', {
-                    advice: 'Please ensure your CORS browser extension is ENABLED for services.leadconnectorhq.com'
+                    advice: 'Enable "Use CORS Proxy" in Settings OR use a CORS browser extension.'
                 });
-                throw new Error('CORS Error: Browser blocked the request. Please enable your CORS extension and try again.');
+                throw new Error('CORS Error: Browser blocked the request. Please enable the CORS Proxy in Settings or use an extension.');
             }
             DEBUG.log('Fetch operation failed', 'error', { error: e.message });
             throw e;
@@ -128,7 +133,11 @@ const GHL = {
         DEBUG.log(`Fetching transcript for message: ${messageId}`, 'info');
 
         try {
-            const url = `https://services.leadconnectorhq.com/conversations/${settings.ghl_location_id}/messages/${messageId}/transcription`;
+            let url = `https://services.leadconnectorhq.com/conversations/${settings.ghl_location_id}/messages/${messageId}/transcription`;
+
+            if (settings.ghl_use_proxy) {
+                url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+            }
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -167,6 +176,7 @@ const DEFAULT_SETTINGS = {
     auto_note_ghl: false,
     ghl_api_key: 'pit-0ca0568a-d707-46f3-a018-95a9c1a00c3f',
     ghl_location_id: 'Cy61ZIoB1Q68krX0lSZA',
+    ghl_use_proxy: false,
     compliance_alerts: true,
     email_reports: false,
     report_email: ''
