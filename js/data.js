@@ -85,10 +85,10 @@ const GHL = {
         DEBUG.log(`Fetching GHL calls for last ${days} days...`, 'info', { start: start.toISOString(), end: end.toISOString() });
 
         try {
-            let url = `https://services.leadconnectorhq.com/calls/?locationId=${settings.ghl_location_id}&startAt=${start.toISOString()}&endAt=${end.toISOString()}&limit=20`;
+            let url = `https://services.leadconnectorhq.com/calls?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
 
             if (settings.ghl_use_proxy) {
-                url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                url = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
                 DEBUG.log('Using CORS Proxy (corsproxy.io)', 'info');
             }
 
@@ -97,7 +97,7 @@ const GHL = {
                 headers: {
                     'Authorization': `Bearer ${settings.ghl_api_key}`,
                     'Accept': 'application/json',
-                    'Version': '2021-07-28'
+                    'Version': '2021-04-15'
                 }
             });
 
@@ -116,10 +116,16 @@ const GHL = {
             return callsList;
         } catch (e) {
             if (e.message === 'Failed to fetch' || e.name === 'TypeError') {
-                DEBUG.log('CORS Error detected: Browser blocked the request.', 'error', {
-                    advice: 'Enable "Use CORS Proxy" in Settings OR use a CORS browser extension.'
+                const proxyStatus = settings.ghl_use_proxy ? 'ENABLED' : 'DISABLED';
+                DEBUG.log(`Network error (Proxy: ${proxyStatus})`, 'error', {
+                    error: e.message,
+                    advice: settings.ghl_use_proxy
+                        ? 'The proxy might be blocked or the URL is invalid. Check System Logs.'
+                        : 'Please enable "Use CORS Proxy" in Settings.'
                 });
-                throw new Error('CORS Error: Please ensure "Use CORS Proxy" is turned ON in Settings.');
+                throw new Error(settings.ghl_use_proxy
+                    ? `Proxy Error: ${e.message}. Please check System Logs in Settings.`
+                    : 'CORS Error: Please enable "Use CORS Proxy" in Settings.');
             }
             DEBUG.log('Fetch operation failed', 'error', { error: e.message });
             throw e;
@@ -136,7 +142,7 @@ const GHL = {
             let url = `https://services.leadconnectorhq.com/conversations/${settings.ghl_location_id}/messages/${messageId}/transcription`;
 
             if (settings.ghl_use_proxy) {
-                url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                url = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
             }
 
             const response = await fetch(url, {
@@ -144,7 +150,7 @@ const GHL = {
                 headers: {
                     'Authorization': `Bearer ${settings.ghl_api_key}`,
                     'Accept': 'application/json',
-                    'Version': '2021-07-28'
+                    'Version': '2021-04-15'
                 }
             });
 
