@@ -71,28 +71,24 @@ const DEBUG = {
 };
 
 const GHL = {
-    async fetchCalls(days = 7) {
+    async fetchCalls(days = 30) {
         const settings = DB.getSettings();
-        if (!settings.ghl_api_key || !settings.ghl_location_id) {
-            DEBUG.log('GHL Fetch rejected: Missing API Key or Location ID', 'error');
-            throw new Error('GHL API Key or Location ID missing in Settings.');
-        }
+        if (!settings.ghl_api_key || !settings.ghl_location_id) return [];
 
         const end = new Date();
         const start = new Date();
         start.setDate(end.getDate() - days);
 
-        DEBUG.log(`Fetching GHL calls for last ${days} days...`, 'info', { start: start.toISOString(), end: end.toISOString() });
+        DEBUG.log(`Fetching GHL calls (Last ${days} days)...`, 'info');
 
-        try {
-            let url = `https://services.leadconnectorhq.com/calls?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
+        const tryFetch = async (endpoint) => {
+            let url = `https://services.leadconnectorhq.com${endpoint}?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
 
             if (settings.ghl_use_proxy) {
                 url = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
-                DEBUG.log('Using CORS Proxy (corsproxy.io)', 'info');
             }
 
-            const response = await fetch(url, {
+            return await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${settings.ghl_api_key}`,
@@ -100,6 +96,17 @@ const GHL = {
                     'Version': '2021-04-15'
                 }
             });
+        };
+
+        try {
+            // Attempt 1: Standard Calls endpoint (mandatory trailing slash in V2)
+            let response = await tryFetch('/calls/');
+
+            // Fallback attempt: Voice AI Dashboard logs if /calls/ is 404
+            if (response.status === 404) {
+                DEBUG.log('Standard /calls/ not found, trying Voice AI fallback...', 'info');
+                response = await tryFetch('/voice-ai/dashboard/call-logs');
+            }
 
             if (!response.ok) {
                 const errBody = await response.json().catch(() => ({}));
@@ -108,12 +115,11 @@ const GHL = {
             }
 
             const data = await response.json();
-            const keys = Object.keys(data);
             const callsList = data.calls || data.callLogs || data.data || [];
 
-            DEBUG.log(`Fetched data keys: ${keys.join(', ')}`, 'info');
             DEBUG.log(`Successfully fetched ${callsList.length} calls`, 'success');
             return callsList;
+
         } catch (e) {
             if (e.message === 'Failed to fetch' || e.name === 'TypeError') {
                 const proxyStatus = settings.ghl_use_proxy ? 'ENABLED' : 'DISABLED';
