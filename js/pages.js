@@ -20,7 +20,7 @@ function renderDashboardPage() {
   el.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.9</span></h1>
+        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.3.0</span></h1>
         <p class="page-subtitle">Pre-sales call performance at a glance · Last 30 days</p>
       </div>
       <button class="btn btn-primary" onclick="App.navigateTo('audit')">
@@ -968,7 +968,7 @@ function renderEmptyDashboard() {
   el.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.2.9</span></h1>
+        <h1 class="page-title">Dashboard <span style="font-size:10px;font-weight:400;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px;vertical-align:middle;margin-left:8px">v1.3.0</span></h1>
         <p class="page-subtitle">Welcome to CallIQ Audit System</p>
       </div>
       <button class="btn btn-primary" onclick="App.navigateTo('audit')">

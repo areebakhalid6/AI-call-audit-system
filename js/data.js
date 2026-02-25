@@ -81,8 +81,8 @@ const GHL = {
 
         DEBUG.log(`Fetching GHL calls (Last ${days} days)...`, 'info');
 
-        const tryFetch = async (endpoint) => {
-            let url = `https://services.leadconnectorhq.com${endpoint}?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
+        const tryFetch = async (endpoint, includeLimit = true) => {
+            let url = `https://services.leadconnectorhq.com${endpoint}?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}${includeLimit ? '&limit=20' : ''}`;
 
             if (settings.ghl_use_proxy) {
                 url = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
@@ -102,10 +102,10 @@ const GHL = {
             // Attempt 1: Standard Calls endpoint (mandatory trailing slash in V2)
             let response = await tryFetch('/calls/');
 
-            // Fallback attempt: Voice AI Dashboard logs if /calls/ is 404
+            // Fallback attempt: Voice AI Dashboard logs if /calls/ is 404 (omitting 'limit' to avoid 422)
             if (response.status === 404) {
                 DEBUG.log('Standard /calls/ not found, trying Voice AI fallback...', 'info');
-                response = await tryFetch('/voice-ai/dashboard/call-logs');
+                response = await tryFetch('/voice-ai/dashboard/call-logs', false);
             }
 
             if (!response.ok) {
