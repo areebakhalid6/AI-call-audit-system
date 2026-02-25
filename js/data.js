@@ -85,7 +85,7 @@ const GHL = {
         DEBUG.log(`Fetching GHL calls for last ${days} days...`, 'info', { start: start.toISOString(), end: end.toISOString() });
 
         try {
-            let url = `https://services.leadconnectorhq.com/calls?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
+            let url = `https://services.leadconnectorhq.com/calls/?locationId=${settings.ghl_location_id}&startAt=${start.toISOString()}&endAt=${end.toISOString()}&limit=20`;
 
             if (settings.ghl_use_proxy) {
                 url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
@@ -97,7 +97,7 @@ const GHL = {
                 headers: {
                     'Authorization': `Bearer ${settings.ghl_api_key}`,
                     'Accept': 'application/json',
-                    'Version': '2021-04-15'
+                    'Version': '2021-07-28'
                 }
             });
 
@@ -144,7 +144,7 @@ const GHL = {
                 headers: {
                     'Authorization': `Bearer ${settings.ghl_api_key}`,
                     'Accept': 'application/json',
-                    'Version': '2021-04-15'
+                    'Version': '2021-07-28'
                 }
             });
 
