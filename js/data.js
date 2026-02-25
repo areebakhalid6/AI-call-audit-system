@@ -88,8 +88,8 @@ const GHL = {
             let url = `https://services.leadconnectorhq.com/calls?locationId=${settings.ghl_location_id}&startDate=${start.getTime()}&endDate=${end.getTime()}&limit=20`;
 
             if (settings.ghl_use_proxy) {
-                url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                DEBUG.log('Using CORS Proxy for GHL fetch', 'info');
+                url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                DEBUG.log('Using CORS Proxy (corsproxy.io)', 'info');
             }
 
             const response = await fetch(url, {
@@ -119,7 +119,7 @@ const GHL = {
                 DEBUG.log('CORS Error detected: Browser blocked the request.', 'error', {
                     advice: 'Enable "Use CORS Proxy" in Settings OR use a CORS browser extension.'
                 });
-                throw new Error('CORS Error: Browser blocked the request. Please enable the CORS Proxy in Settings or use an extension.');
+                throw new Error('CORS Error: Please ensure "Use CORS Proxy" is turned ON in Settings.');
             }
             DEBUG.log('Fetch operation failed', 'error', { error: e.message });
             throw e;
@@ -136,7 +136,7 @@ const GHL = {
             let url = `https://services.leadconnectorhq.com/conversations/${settings.ghl_location_id}/messages/${messageId}/transcription`;
 
             if (settings.ghl_use_proxy) {
-                url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
             }
 
             const response = await fetch(url, {
